@@ -7,7 +7,7 @@ const connection = require("../db/mysql_connection");
 // @desc        회원가입
 // @route       POST /api/v1/users
 // @request     email, passwd
-// @response    success
+// @response    success, token
 exports.createUser = async (req, res, next) => {
   let email = req.body.email;
   let passwd = req.body.passwd;
