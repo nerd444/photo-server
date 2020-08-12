@@ -85,7 +85,7 @@ exports.login = async (req, res, next) => {
     return;
   }
 };
-
+//
 // @desc    로그아웃 (1개 기기)
 // @route   DELETE /api/v1/users/logout
 // @request user_id(auth)
