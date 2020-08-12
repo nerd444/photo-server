@@ -1,33 +1,53 @@
 package com.nerd.photoapp;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.PointerIcon;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
+import com.android.volley.Network;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.nerd.photoapp.adapter.RecyclerViewAdapter;
+import com.nerd.photoapp.api.NetworkClient;
+import com.nerd.photoapp.api.PostsApi;
+import com.nerd.photoapp.model.Post;
 import com.nerd.photoapp.utils.Utils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Retrofit;
 
 public class WelcomeActivity extends AppCompatActivity {
 
     Button btn_logout;
+
+    RecyclerView recyclerView;
+    RecyclerViewAdapter recyclerViewAdapter;
+    ArrayList<Post> postArrayList = new ArrayList<>();
+
+    String token;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,6 +55,11 @@ public class WelcomeActivity extends AppCompatActivity {
         setContentView(R.layout.activity_welcome);
 
         btn_logout = findViewById(R.id.btn_logout);
+        recyclerView = findViewById(R.id.recyclerView);
+
+        recyclerView.setHasFixedSize(true);
+        recyclerView.setLayoutManager(new LinearLayoutManager(WelcomeActivity.this));
+
         btn_logout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -87,6 +112,33 @@ public class WelcomeActivity extends AppCompatActivity {
                     }
                 };
                 Volley.newRequestQueue(WelcomeActivity.this).add(request);
+            }
+        });
+
+        SharedPreferences sp = getSharedPreferences(Utils.PREFERENCES_NAME, MODE_PRIVATE);
+        token = sp.getString("token", null);
+
+        Log.i("AAA", "token : "+ token);
+
+        getNetworkData();
+    }
+
+    private void getNetworkData() {
+        Retrofit retrofit = NetworkClient.getRetrofitClient(WelcomeActivity.this);
+
+        PostsApi postsApi = retrofit.create(PostsApi.class);
+
+        Call<ResponseBody> call = postsApi.getPosts(token, 0, 25);
+
+        call.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
+                Log.i("AAA", response.toString());
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                Log.i("AAA", t.toString());
             }
         });
     }
