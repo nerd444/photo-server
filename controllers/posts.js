@@ -1,7 +1,6 @@
 const path = require("path");
 const connection = require("../db/mysql_connection");
-const { post } = require("../routes/posts");
-const { off } = require("../db/mysql_connection");
+
 // ㅁ
 // @desc        사진1장과 내용을 업로드 하는 API
 // @route       POST /api/v1/posts
