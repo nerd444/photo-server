@@ -44,7 +44,7 @@ exports.createUser = async (req, res, next) => {
 // @desc    로그인
 // @route   POST /api/v1/users/login
 // @request email, passwd
-// @response  success
+// @response  success, token
 exports.login = async (req, res, next) => {
   let email = req.body.email;
   let passwd = req.body.passwd;
