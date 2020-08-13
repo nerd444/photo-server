@@ -12,14 +12,22 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.android.volley.Request;
-import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.nerd.photoapp.api.NetworkClient;
+import com.nerd.photoapp.api.UserApi;
+import com.nerd.photoapp.model.UserReq;
+import com.nerd.photoapp.model.UserRes;
 import com.nerd.photoapp.utils.Utils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -54,46 +62,42 @@ public class LoginActivity extends AppCompatActivity {
                     return;
                 }
 
-                // 포스트맨에서 body부분 셋팅
-                JSONObject object = new JSONObject();
-                try {
-                    object.put("email", email);
-                    object.put("passwd", passwd);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+                // body 부분 셋팅
+                UserReq userReq = new UserReq(email, passwd);
 
-                JsonObjectRequest request = new JsonObjectRequest(
-                        Request.Method.POST,                            // 메소드
-                        Utils.BASEURL + "/api/v1/users/login",      // route
-                        object,                                           // 포스트로 보낼 데이터
-                        new Response.Listener<JSONObject>() {
-                            @Override
-                            public void onResponse(JSONObject response) {
-                                Log.i("로그인",response.toString());
-                                try {
-                                    String token = response.getString("token");
-                                    sp = getSharedPreferences(Utils.PREFERENCES_NAME, MODE_PRIVATE);
-                                    SharedPreferences.Editor editor = sp.edit();
-                                    editor.putString("token", token);
-                                    editor.apply();
+                // 서버로 이메일과 비밀번호를 전송한다.
+                Retrofit retrofit = NetworkClient.getRetrofitClient(LoginActivity.this);
+                UserApi userApi = retrofit.create(UserApi.class);
 
-                                    Intent i = new Intent(LoginActivity.this, WelcomeActivity.class);
-                                    startActivity(i);
-                                    finish();
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                        },
-                        new Response.ErrorListener() {
-                            @Override
-                            public void onErrorResponse(VolleyError error) {
-                                Log.i("로그인", error.toString());
-                            }
+                Call<UserRes> call = userApi.loginUser(userReq);
+
+                call.enqueue(new Callback<UserRes>() {
+                    @Override
+                    public void onResponse(Call<UserRes> call, Response<UserRes> response) {
+                        // 상태코드가 200 인지 확인
+                        if (response.isSuccessful()){
+                            // response.body()가 UserRes 이다.
+                            boolean success = response.body().isSuccess();
+                            String token = response.body().getToken();
+                            Log.i("AAAA", "success : "+success+" token : "+token);
+
+                            SharedPreferences sp = getSharedPreferences(Utils.PREFERENCES_NAME, MODE_PRIVATE);
+                            SharedPreferences.Editor editor = sp.edit();
+                            editor.putString("token", token);
+                            editor.apply();
+
+                            Intent i = new Intent(LoginActivity.this, WelcomeActivity.class);
+                            startActivity(i);
+                            finish();
+
                         }
-                );
-                Volley.newRequestQueue(LoginActivity.this).add(request);
+                    }
+
+                    @Override
+                    public void onFailure(Call<UserRes> call, Throwable t) {
+
+                    }
+                });
             }
         });
 
