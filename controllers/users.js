@@ -68,7 +68,7 @@ exports.login = async (req, res, next) => {
       return;
     }
   } catch (e) {
-    res.status(500).json();
+    res.status(500).json(e);
     return;
   }
 
@@ -81,7 +81,7 @@ exports.login = async (req, res, next) => {
     res.status(200).json({ success: true, token: token });
     return;
   } catch (e) {
-    res.status(500).json();
+    res.status(500).json(e);
     return;
   }
 };
